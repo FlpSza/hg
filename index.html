@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Higo</title>
+    <link rel="shortcut icon" href="../img/logotipo_2.png">
+    <style>
+        * {
+            margin: 0;
+            margin-right: 0%;
+            padding-right: 0%;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'SN Pro';
+            src: url('./fonts/SNPro-Regular-BF65efc640b4961.otf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        h1 {
+            font-family: 'SN Pro', sans-serif;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #fff;
+            overflow-x: hidden; /* Remove o scroll horizontal */
+
+        }
+
+        /* Seções para conteúdo */
+        .section {
+            padding: 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex; /* Aplica flexbox */
+            justify-content: center; /* Alinha horizontalmente no centro */
+            align-items: center; /* Alinha verticalmente no centro */
+            flex-direction: column; /* Organiza os itens em coluna (imagem acima do texto) */
+        }
+
+        .section.header {
+            display: flex;
+            flex-direction: row; /* Imagem e texto ficam lado a lado */
+            align-items: center; /* Alinha os itens verticalmente ao centro */
+            justify-content: center; /* Centraliza horizontalmente */
+            margin-top: 0%;
+            width: 100%;
+            background-image: url('./img/Banner_Site_Promo.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .section.header img{
+            height: 43rem;
+        }
+
+        .section.content {
+            margin-top: -350px; /* Ajuste o valor conforme necessário para subir a seção */
+        }
+
+        .section1 {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .card-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-left: -100%;
+            margin-top: 17%;
+        }
+        
+        .card {
+            background-color: white;
+            color: black;
+            border-radius: 1px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 3px solid black;
+            text-align: left;
+            width: 50%;
+            height: 32rem;
+            z-index: 1;
+        }
+
+        .card h2{
+            margin-top: 2%;
+            margin-left: 3%;
+        }
+
+        .imagens1 {
+            display: flex;
+            flex-direction: column; /* Imagem e texto ficam lado a lado */
+            margin-left: 18%;
+            align-items: center;
+            justify-content: center; /* Centraliza horizontalmente */
+            z-index: 10;
+        }
+
+        .nocontrole{
+            position: absolute;
+            width: 25%;
+            margin-top: -10%;
+        }
+
+        .header, .content, .footer {
+            background-color: #fff;
+            color: white;
+        }
+
+        .passo {
+            margin-top: 2%;
+            width: 20%;
+        }
+
+        .segundo_card {
+            display: flex;
+            position: absolute;
+            margin-left: 20%;
+            margin-right: 15%;
+        }
+
+        .cardbaixo {
+            font-family: 'SN Pro', sans-serif;
+            margin-left: -10%;
+            width: 100%;
+        }
+        .cardbaixo a{
+            width: 10%;
+        }
+
+        .button {
+            font-family: 'SN Pro', sans-serif;
+            margin-top: 20px;
+            padding: 20px 80px;
+            background-color: green;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 20px;
+        }
+
+        .botao{
+            margin-top: 10%;
+            margin-left: -35%;
+        }
+
+        .botao2{
+            position: absolute;
+            z-index: 10000000;
+            margin-top: -15%;
+            margin-left: 39%;
+        }
+
+        h1 span {
+            display: block; /* Isso faz com que cada span ocupe uma linha */
+        }
+
+        .familia {
+            width: 60%;
+            margin-left: 50%;
+            margin-top: 15%;
+            display: block; /* Garante que o elemento se comporte como um bloco */
+        }
+
+        .hcnm{
+            position: absolute;
+            margin-left: 20%;
+            margin-top: 10%;
+            width: 35%;
+        }
+
+        .sociais {
+            display: flex;
+            justify-content: center; /* Centraliza o conteúdo horizontalmente */
+            align-items: center; /* Alinha o conteúdo verticalmente */
+            margin-top: -10%;
+        }
+        
+        .cardbaixo {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+            justify-items: center; /* Centraliza os itens em cada célula */
+            align-items: center; /* Centraliza verticalmente os itens em cada célula */
+            margin-left: -120%;
+        }
+        
+        .cardbaixo img {
+            width: 5rem; /* Ajuste o tamanho das imagens */
+            height: 50%;
+            margin-top: 2rem;
+            margin-left: 3rem;
+            transition: transform 0.3s;
+        }
+        
+        .cardbaixo a img:hover {
+            transform: scale(1.2); /* Aumenta o tamanho ao passar o mouse */
+            cursor: pointer;
+        }
+
+
+        @media (max-width: 768px) {
+            html, body {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                overflow-x: hidden;
+            }
+            .section.header {
+                flex-direction: column; /* Coloca a imagem e o texto em coluna */
+                text-align: center; /* Centraliza o conteúdo */
+                background-image: url('./img/Banner_Site_Promo_Celular.jpg');
+                background-size: cover;
+            }
+        
+            .section1{
+                display: flexbox;
+                flex-direction: column;
+            }
+        
+            .card {
+                width: 100%; /* Faz o cartão ocupar toda a largura disponível */
+                margin: 20px 0; /* Espaçamento entre os cartões */
+            }
+        
+            .sociais {
+                flex-direction: column; /* Alinha os ícones de redes sociais em coluna */
+                margin-top: 20px;
+            }
+        
+            .button {
+                font-size: 16px; /* Reduz o tamanho do texto do botão em telas pequenas */
+                padding: 15px 40px;
+            }
+}
+    </style>
+</head>
+<body>
+    <!-- Conteúdo principal -->
+    <div class="section header">
+        <!-- <img src="../img/IMAGEM_1.png" alt="Imagem Central" class="IMAGEM_1"> -->
+         <!-- <img src="./img/Banner_Site_Promo.jpg" alt=""> -->
+    </div>
+    <div class="botao2">
+        <a href="./checkout.html" class="button">QUERO PARTICIPAR</a>
+    </div>
+    <div class="section1">
+        <div class="imagens1">
+            <div class="imagens-container">
+                <div>
+                    <img src="../img/Npasso1.png" class="passo">
+                </div>
+                <div>
+                    <img src="../img/Npasso2.png" class="passo">
+                </div>
+                <div>
+                    <img src="../img/Npasso3.png" class="passo">
+                </div>
+                <div>
+                    <img src="../img/Npasso4.png" class="passo">
+                </div>
+            </div>
+            <div class="botao">
+                <a href="./checkout.html" class="button">QUERO PARTICIPAR</a>
+            </div>
+        </div>
+        <div class="card-container">
+            <img src="./img/no controle.png" alt="" class="nocontrole">
+            <div class="card">
+                <h2>• Será sorteado 120 viagens (10 por mês);</h2>
+                <h2>• Apenas território brasileiro;</h2>
+                <h2>• Todos os destinos serão publicados no ínicio do mês;</h2>
+                <h2>• O ganhador tem direito a levar a um acompanhante;</h2>
+                <h2>• O sorteio será no último dia de cada mês;</h2>
+                <h2>• Pagamentos com cartões de crédito ganha 1 número a mais para concorrer;</h2>
+                <h2>• O pagamento realizado no mês participará dos sorteios referente a aquele mês</h2>
+                
+            </div>
+        </div>
+    </div>    
+
+<img src="./img/hcnm.png" alt="" class="hcnm">
+<img src="../img/Familia_fundo2.png" class="familia"></img>
+<div class="sociais">
+    <div class="segundo_card">
+        <div class="cardbaixo">
+            <a href="https://www.instagram.com" target="_blank">
+                <img src="./img/instagramV.png" alt="Logo do Instagram">
+            </a>
+            <a href="https://www.whatsapp.com" target="_blank">
+                <img src="./img/WhatsappV.png" alt="Logo do WhatsApp">
+            </a>
+            <a href="https://www.tiktok.com" target="_blank">
+                <img src="./img/TiktokV.png" alt="Logo do TikTok">
+            </a>
+            <a href="https://www.youtube.com" target="_blank">
+                <img src="./img/youtubeV.png" alt="Logo do YouTube">
+            </a>
+            <a href="https://www.twitter.com" target="_blank">
+                <img src="./img/X.png" alt="Logo do X (Twitter)">
+            </a>
+            <a href="https://www.facebook.com" target="_blank">
+                <img src="./img/FacebookV.png" alt="Logo do Facebook">
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
