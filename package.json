@@ -21,6 +21,7 @@
     "mysql2": "^3.12.0",
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "pagarme": "^4.35.2"
   }
 }

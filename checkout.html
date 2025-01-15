@@ -157,30 +157,21 @@
   <body>
     <header>
       <div class="logo">
-        <!-- Substitua 'logo-higo.png' pelo caminho real da sua logo -->
         <img src="img/logotipo_2.png" alt="Logo Higo" />
       </div>
     </header>
 
-    <!-- Conteúdo do Checkout -->
     <div class="checkout-content">
-      <!-- Cabeçalho do checkout com fundo cinza -->
       <div class="checkout-header">
-        <!-- Checklist dos estágios -->
         <div class="checkout-stages">
-          <!-- Estágio 1: Login -->
           <div class="stage completed">
             <i class="fas fa-check-circle"></i>
             <p>Login</p>
           </div>
-
-          <!-- Estágio 2: Informações do Usuário -->
           <div class="stage pending">
             <i class="fas fa-user"></i>
             <p>Informações do Usuário</p>
           </div>
-
-          <!-- Estágio 3: Confirmação -->
           <div class="stage pending">
             <i class="fas fa-check"></i>
             <p>Confirmação</p>
@@ -188,141 +179,136 @@
         </div>
       </div>
 
-      <!-- Adicione o conteúdo do checkout aqui -->
       <div class="subtitulo">
-        <h4>Informações do Titular.</h4>
+        <h4>Informações do Titular</h4>
         <hr />
       </div>
 
-      <div class="sub-itens">
+      <form id="formCadastro">
         <div class="form-group">
-          <label for="nome">
-            Nome
-            <input type="text" id="nome" name="nome" />
-          </label>
-          <label for="sobrenome">
-            Sobrenome
-            <input type="text" id="sobrenome" name="sobrenome" />
-          </label>
-        </div>
-        <div class="form-group">
-          <label for="nascimento">
-            Data de Nascimento
-            <input type="date" id="nascimento" name="nascimento" />
-          </label>
-          <label for="nacionalidade">
-            Nacionalidade
-            <input type="text" id="nacionalidade" name="nacionalidade" />
-          </label>
-        </div>
-        <div class="form-group">
-          <label for="ddd">
-            DDD
-            <input type="text" id="ddd" name="ddd" />
-          </label>
-          <label for="telefone">
-            Telefone
-            <input type="text" id="telefone" name="telefone" />
-          </label>
-        </div>
-        <div class="form-group">
-          <label for="cpf">
-            CPF/CNPJ
-            <input type="text" id="cpf" name="cpf" />
-          </label>
-          <label for="cep">
-            CEP
-            <input type="text" id="cep" name="cep" />
-          </label>
-          <div class="form-group">
-            <label for="numero-casa">
-              Número da Casa
-              <input type="text" id="numero-casa" name="numero-casa" />
-            </label>
-          </div>
-        </div>
-        <hr />
-        <div class="subtitulo">
-          <h4>Confirme seu email.</h4>
-          <br />
-        </div>
-        <div class="form-group">
-          <label for="email" class="full-width">
-            Email
-            <input type="email" id="email" name="email" />
-          </label>
-          <label for="confirmar-email" class="full-width">
-            Confirmação de Email
-            <input type="email" id="confirmar-email" name="confirmar-email" />
-          </label>
-        </div>
-      </div>
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" name="nome" required />
 
-      <hr />
+          <label for="sobrenome">Sobrenome</label>
+          <input type="text" id="sobrenome" name="sobrenome" required />
+        </div>
 
-      <div class="button-container">
-        <a>
-          <button type="button">Avançar</button>
-        </a>
-      </div>
+        <div class="form-group">
+          <label for="nascimento">Data de Nascimento</label>
+          <input type="date" id="nascimento" name="nascimento" required />
+
+          <label for="nacionalidade">Nacionalidade</label>
+          <input type="text" id="nacionalidade" name="nacionalidade" required />
+        </div>
+
+        <div class="form-group">
+          <label for="Country_code">Código do País</label>
+          <input type="text" id="Country_code" name="Country_code" required />
+
+          <label for="ddd">DDD</label>
+          <input type="text" id="ddd" name="ddd" required />
+
+          <label for="telefone">Telefone</label>
+          <input type="text" id="telefone" name="telefone" required />
+        </div>
+
+        <div class="form-group">
+          <label for="cpf">CPF</label>
+          <input type="text" id="cpf" name="cpf" required />
+        </div>
+
+        <div class="form-group">
+          <label for="cep">CEP</label>
+          <input type="text" id="cep" name="cep" required />
+
+          <label for="city">Cidade</label>
+          <input type="text" id="city" name="city" required />
+
+          <label for="state">Estado</label>
+          <input type="text" id="state" name="state" required />
+
+          <label for="line_1">Endereço</label>
+          <input type="text" id="line_1" name="line_1" required />
+
+          <label for="numero-casa">Número</label>
+          <input type="text" id="numero-casa" name="numero-casa" required />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+
+        <div class="button-container">
+          <button type="button" id="submitButton">Avançar</button>
+        </div>
+      </form>
     </div>
+
     <script>
-      // Função que é chamada quando o usuário clica em "Avançar"
-      document.querySelector("button").addEventListener("click", function () {
-        // Captura os dados do formulário
-        const nome = document.getElementById("nome").value;
-        const sobrenome = document.getElementById("sobrenome").value;
-        const nascimento = document.getElementById("nascimento").value;
-        const nacionalidade = document.getElementById("nacionalidade").value;
-        const ddd = document.getElementById("ddd").value;
-        const telefone = document.getElementById("telefone").value;
-        const cpf = document.getElementById("cpf").value;
-        const cep = document.getElementById("cep").value;
-        const email = document.getElementById("email").value;
-        const numeroCasa = document.getElementById("numero-casa").value;
+      document
+        .getElementById("submitButton")
+        .addEventListener("click", function () {
+          const nome = document.getElementById("nome").value.trim();
+          const sobrenome = document.getElementById("sobrenome").value.trim();
+          const nomeCompleto = `${nome} ${sobrenome}`;
+          const nascimento = document.getElementById("nascimento").value;
+          const country = document.getElementById("nacionalidade").value.trim();
+          const countryCode = document
+            .getElementById("Country_code")
+            .value.trim();
+          const ddd = document.getElementById("ddd").value.trim();
+          const telefone = document.getElementById("telefone").value.trim();
+          const cpf = document.getElementById("cpf").value.trim();
+          // const tipoPessoa = document.getElementById("tipoPessoa").value;
+          const cep = document.getElementById("cep").value.trim();
+          const city = document.getElementById("city").value.trim();
+          const state = document.getElementById("state").value.trim();
+          const line1 = `${document
+            .getElementById("line_1")
+            .value.trim()}, nº ${document
+            .getElementById("numero-casa")
+            .value.trim()}`;
+          const email = document.getElementById("email").value.trim();
+          // const confirmarEmail = document.getElementById("confirmar-email").value.trim();
 
-        // Criação do objeto com os dados do formulário
-        const clienteData = {
-          nome,
-          sobrenome,
-          nascimento,
-          nacionalidade,
-          ddd,
-          telefone,
-          cpf,
-          cep,
-          numeroCasa,
-          email,
-        };
+          const clienteData = {
+            name: nomeCompleto,
+            birthdate: nascimento,
+            address_country: "BR",
+            phone_country_code: countryCode,
+            phone_area_code: ddd,
+            phone_number: telefone,
+            document: cpf,
+            document_type: "CPF",
+            address_zip_code: cep,
+            address_city: city,
+            address_state: state,
+            address_line_1: line1,
+            email: email,
+          };
 
-        // Enviar os dados para o backend
-        fetch("https://higopromopage.onrender.com/criar-cliente", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(clienteData),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Resposta do servidor:", data);
-            if (data.success) {
-              // Redirecionar para a próxima página
-              window.location.href = "./payment.html";
-            } else {
-              console.error("Erro retornado pelo backend:", {
-                status: "Falha",
-                mensagemErro: data.error,
-                respostaCompleta: data,
-              });
-              alert("Erro ao criar o cliente, verifique as informações adicionadas.");
-              console.log("Resposta do servidor:", data);
-            }
+          // Enviando os dados para o backend via fetch
+          fetch("/cadastrar-cliente", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json", // Enviando os dados no formato JSON
+            },
+            body: JSON.stringify(clienteData), // Convertendo o objeto em uma string JSON
           })
-          .catch((error) => {
-            console.error("Erro ao enviar os dados:", error);
-          });
-      });
+            .then((response) => response.json())
+            .then((data) => {
+              // Se o envio for bem-sucedido, mostre uma mensagem ou redirecione o usuário
+              console.log("Cliente cadastrado com sucesso:", data);
+              alert("Cadastro realizado com sucesso!");
+              // Aqui você pode redirecionar o usuário para outra página ou mudar o estado da UI
+            })
+            .catch((error) => {
+              // Se ocorrer algum erro, mostre uma mensagem de erro
+              console.error("Erro ao cadastrar cliente:", error);
+              alert("Ocorreu um erro ao realizar o cadastro.");
+            });
+        });
     </script>
   </body>
 </html>

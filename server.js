@@ -7,8 +7,9 @@ const session = require("express-session");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
-const cron = require('node-cron');
-const fs = require('fs');
+const cron = require("node-cron");
+const pagarme = require("pagarme");
+const fs = require("fs");
 // const fetch = require('node-fetch');
 const PORT = 3000;
 require("dotenv").config();
@@ -41,16 +42,18 @@ app.use(
 const PIX_API_URL = "https://cdpj.partners.bancointer.com.br/oauth/v2/token"; // Substitua pelo endpoint correto
 const CLIENT_ID = "3fea13df-1e68-447c-b306-a87d7c058024"; // Armazene o client_id no .env
 const CLIENT_SECRET = "79f8d856-bb83-4ada-a5d0-01b22cfe43c1"; // Armazene o client_secret no .env
-const CERT_PATH = './certificados/Inter API_Certificado.crt';
-const KEY_PATH = './certificados/Inter API_Chave.key';
+const CERT_PATH = "./certificados/Inter API_Certificado.crt";
+const KEY_PATH = "./certificados/Inter API_Chave.key";
 // Caminhos para os arquivos de certificado e chave privada
-const certPath = path.resolve(__dirname, 'certificados/Inter API_Certificado.crt');
-const keyPath = path.resolve(__dirname, 'certificados/Inter API_Chave.key');
+const certPath = path.resolve(
+  __dirname,
+  "certificados/Inter API_Certificado.crt"
+);
+const keyPath = path.resolve(__dirname, "certificados/Inter API_Chave.key");
 
 // Rota principal
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+o});
 
 // Rota para testar conexão com o banco de dados
 app.get("/test-connection", async (req, res) => {
@@ -105,10 +108,10 @@ app.post("/register", (req, res) => {
 
 // Rota para processar o login de usuário
 app.post("/login", async (req, res) => {
-  const { username, pass } = req.body;
+  const { email, pass } = req.body;
 
   // Verificar se o nome de usuário e senha foram informados
-  if (!username || !pass) {
+  if (!email || !pass) {
     return res
       .status(400)
       .json({ message: "Nome de usuário e senha são obrigatórios." });
@@ -116,8 +119,8 @@ app.post("/login", async (req, res) => {
 
   try {
     // Buscar o usuário no banco de dados pelo nome de usuário
-    const [rows] = await db.query("SELECT * FROM users WHERE username = ?", [
-      username,
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [
+      email,
     ]);
 
     if (rows.length === 0) {
@@ -139,131 +142,146 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Configuração da chave da API do Asaas
-// const ASAAS_API_KEY =
-//   "$aact_MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjUyOWZkNGYwLTE5Y2YtNGY5NC1iMmJhLTk3MTFiYzA0OTdjYTo6JGFhY2hfMTQ5ZjcxMjAtODUxYi00NGVlLTk4MDQtZmUzYTg1MzU0Y2Qw";
-const ASAAS_API_KEY = "$aact_MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjhhYjE0MmIyLTQ2NmQtNDNhNC1iNTBlLTI2Zjc3MmY5ODA0Zjo6JGFhY2hfYzRhMGVmYzAtY2ZlZi00YjlkLTljOTEtYTExNzc3Y2IwYjg4"
 // Endpoint para criar cliente
-app.post("/criar-cliente", async (req, res) => {
+app.post("/cadastrar-cliente", async (req, res) => {
   const clienteData = req.body;
 
   try {
-    // Enviar dados para criar o cliente no Asaas
-    console.log("Enviando dados para criar cliente no Asaas:", clienteData);
-
+    // Enviar dados para o Pagar.me
+    console.log("Enviando dados para o Pagar.me...");
     const response = await axios.post(
-      "https://www.asaas.com/api/v3/customers",
+      "https://api.pagar.me/core/v5/customers",
       {
-        name: `${clienteData.nome} ${clienteData.sobrenome}`,
-        cpfCnpj: clienteData.cpf,
+        address: {
+          state: clienteData.address_state,
+          country: clienteData.address_country,
+          city: clienteData.address_city,
+          zip_code: clienteData.address_zip_code,
+          line_1: clienteData.address_line_1,
+        },
+        phones: {
+          mobile_phone: {
+            area_code: clienteData.phone_area_code,
+            number: clienteData.phone_number,
+            country_code: clienteData.phone_area_code,
+          },
+        },
+        birthdate: clienteData.birthdate,
+        name: clienteData.name,
         email: clienteData.email,
-        phone: clienteData.telefone.replace(/\D/g, ""), // Remove caracteres não numéricos
-        postalCode: clienteData.cep.replace(/\D/g, ""), // Remove caracteres não numéricos
+        document_type: "CPF",
+        document: clienteData.document,
+        type: "individual",
       },
       {
         headers: {
           accept: "application/json",
-          access_token: ASAAS_API_KEY, // Sua chave da API
+          authorization:
+            "Basic c2tfdGVzdF9lMzU5MjJmNmFmNzI0ZWRjOWM1NGE0NWI0ZWRjZjBmYTo=",
           "content-type": "application/json",
         },
       }
     );
 
-    const customerId = response.data.id; // Pega o customerId da resposta do Asaas
-    console.log("Cliente criado com sucesso no Asaas:", customerId);
+    console.log("Cliente cadastrado no Pagar.me:", response.data);
 
-    // Armazenar os dados na sessão
-    req.session.userData = {
-      email: clienteData.email,
-      cpfCnpj: clienteData.cpf,
-      telefone: clienteData.telefone,
-      postalCode: clienteData.cep,
-      numeroCasa: clienteData.numeroCasa,
-    };
+    // 1. Verificar se o email já existe na tabela users
+    const checkEmailUsersQuery = "SELECT id FROM users WHERE email = ? LIMIT 1";
+    const [userResult] = await db.query(checkEmailUsersQuery, [
+      clienteData.email,
+    ]);
 
-    // Verificar se o email já existe na tabela users
-    const checkEmailQuery = "SELECT id FROM users WHERE email = ? LIMIT 1";
-    const [userResult] = await db.query(checkEmailQuery, [clienteData.email]);
-
-    if (userResult.length > 0) {
-      // Atualizar o customerId do usuário existente
-      const updateQuery = "UPDATE users SET customerId = ? WHERE id = ?";
-      await db.query(updateQuery, [customerId, userResult[0].id]);
-      console.log(`Usuário atualizado com customerId: ${customerId}`);
-    } else {
+    if (userResult.length === 0) {
+      console.log(
+        "Email não encontrado na tabela users, criando novo usuário..."
+      );
+      // Se não existir, criamos um novo usuário
       const genericPassword = crypto.randomBytes(4).toString("hex"); // Gerar senha genérica
-    //   const hashedPassword = crypto
-    //     .createHash("sha256")
-    //     .update(genericPassword)
-    //     .digest("hex"); 
-
-      // Criar novo usuário com o customerId
-      const insertQuery =
-        "INSERT INTO users (username, email, phone, customerId, password) VALUES (?, ?, ?, ?, ?)";
-      const [insertResult] = await db.query(insertQuery, [
-        clienteData.nome,
+      const insertUserQuery =
+        "INSERT INTO users (username, email, phone, password) VALUES (?, ?, ?, ?)";
+      const [insertUserResult] = await db.query(insertUserQuery, [
+        clienteData.name,
         clienteData.email,
-        clienteData.telefone,
-        // clienteData.cpf,
-        // clienteData.cep,
-        customerId,
+        clienteData.phone_number,
         genericPassword,
       ]);
-      console.log(`Novo usuário criado com ID: ${insertResult.insertId}`);
+      console.log(
+        `Novo usuário criado na tabela users com ID: ${insertUserResult.insertId}`
+      );
+    } else {
+      console.log(
+        "Email encontrado na tabela users, não foi necessário criar novo usuário."
+      );
+    }
 
-      // Configurar o transporte de email
+    // 2. Verificar se o email já existe na tabela user_data
+    const checkEmailUserDataQuery =
+      "SELECT id FROM user_data WHERE email = ? LIMIT 1";
+    const [userDataResult] = await db.query(checkEmailUserDataQuery, [
+      clienteData.email,
+    ]);
+
+    if (userDataResult.length === 0) {
+      console.log(
+        "Email não encontrado na tabela user_data, criando novo registro..."
+      );
+
+      // Se não existir, criamos um novo registro em user_data
+      const insertUserDataQuery = `
+        INSERT INTO user_data (
+          pagarme_id, name, email, code, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?)
+      `;
+
+      await db.query(insertUserDataQuery, [
+        response.data.id, // pagarme_id
+        response.data.name, // name
+        response.data.email, // email
+        response.data.document, // code (como exemplo, estou usando 'document' como 'code', se necessário, ajuste a lógica)
+        new Date(), // created_at
+        new Date(), // updated_at
+      ]);
+
+      console.log("Novo cliente registrado na tabela user_data!");
+    } else {
+      console.log(
+        "Email encontrado na tabela user_data, não foi necessário criar novo registro."
+      );
+    }
+
+    // 3. Se for um novo usuário, enviar o email de confirmação
+    if (userResult.length === 0) {
       const transporter = nodemailer.createTransport({
-        host: 'smtp.hostinger.com', // Servidor SMTP da Hostinger
-        port: 465, // Porta para SSL
-        secure: true, // Utiliza SSL
+        host: "smtp.hostinger.com",
+        port: 465,
+        secure: true,
         auth: {
-          user: 'confirmacao@higoviagens.com', // Seu email
-          pass: "Confirmacao25.", // Use senha do app (não senha normal)
+          user: "confirmacao@higoviagens.com",
+          pass: "Confirmacao25.",
         },
       });
 
-      // Configurar e enviar o email
       const mailOptions = {
         from: "confirmacao@higoviagens.com",
         to: clienteData.email,
         subject: "Bem-vindo à nossa plataforma!",
-        text: `Olá ${clienteData.nome},\n\nSeu usuário foi criado com sucesso!\n\nSenha de acesso: ${genericPassword}\n\nPor favor, altere sua senha após o primeiro login.\n\nAtenciosamente,\nEquipe.`,
+        text: `Olá ${clienteData.name},\n\nSeu usuário foi criado com sucesso!\n\nSenha de acesso: ${genericPassword}\n\nPor favor, altere sua senha após o primeiro login.\n\nAtenciosamente,\nEquipe.`,
       };
 
-      try {
-        await transporter.sendMail(mailOptions);
-        console.log("Email enviado com sucesso para:", clienteData.email);
-      } catch (emailError) {
-        console.error("Erro ao enviar o email:", emailError.message);
-        console.log("Detalhes do email não enviado:", mailOptions);
-      }
+      await transporter.sendMail(mailOptions);
+      console.log("Email enviado com sucesso!");
     }
 
-    // Resposta de sucesso
-    res.json({
-      success: true,
-      message: "Cliente criado e sincronizado com sucesso.",
-      customerId: customerId,
-    });
+    return res
+      .status(200)
+      .json({
+        message: "Cliente cadastrado com sucesso!",
+        data: response.data,
+        
+      });
   } catch (error) {
-    console.error(
-      "Erro ao criar cliente:",
-      error.response ? error.response.data : error.message
-    );
-
-    // Log dos dados enviados (para depuração)
-    console.log("Dados enviados para a API Asaas:", {
-      name: `${clienteData.nome} ${clienteData.sobrenome}`,
-      cpfCnpj: clienteData.cpf,
-      email: clienteData.email,
-      phone: clienteData.telefone,
-      postalCode: clienteData.cep,
-    });
-
-    res.status(500).json({
-      success: false,
-      error: "Erro ao criar o cliente no Asaas ou sincronizar no banco.",
-    });
+    console.error("Erro ao cadastrar no Pagar.me:", error);
+    return res.status(500).json({ message: "Erro ao processar a requisição" });
   }
 });
 
@@ -284,157 +302,72 @@ app.get("/api/usuario-logado", (req, res) => {
 
 // Rota para criar assinatura (cobrança recorrente) com pagamento via cartão de crédito
 app.post("/criar-assinatura", async (req, res) => {
-  // Recuperar os dados da sessão
-  const userData = req.session.userData;
-
-  if (!userData) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: "Dados do usuário não encontrados na sessão.",
-      });
-  }
-
-  const { email, cpfCnpj, telefone, postalCode, numeroCasa } = userData;
-
-  console.log("Dados do usuário recuperados da sessão:", {
-    email,
-    cpfCnpj,
-    telefone,
-    postalCode,
-    numeroCasa,
-  });
+  const assinaturaData = req.body;
 
   try {
-    // Detalhes do cartão enviados na requisição
-    const { cardDetails } = req.body;
-
-    if (
-      !cardDetails ||
-      !cardDetails.cardHolder ||
-      !cardDetails.cardNumber ||
-      !cardDetails.expirationMonth ||
-      !cardDetails.expirationYear ||
-      !cardDetails.cvv
-    ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Detalhes do cartão incompletos ou inválidos.",
-        });
-    }
-
-    console.log("Detalhes do cartão:", cardDetails);
-
-    // Garantir que o mês de expiração tenha dois dígitos
-    const expirationMonth = cardDetails.expirationMonth
-      ? cardDetails.expirationMonth.padStart(2, "0")
-      : "";
-    const expirationYear = cardDetails.expirationYear || "";
-    const cvv = cardDetails.cvv || "";
-
-    // Query para buscar o customerId do usuário pelo email
-    const usuarioQuery =
-      "SELECT customerId FROM users WHERE email = ? LIMIT 1;";
-    const [usuarioResult] = await db.query(usuarioQuery, [email]);
-
-    if (usuarioResult.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Usuário não encontrado." });
-    }
-
-    const customerId = usuarioResult[0].customerId;
-    console.log("customerId encontrado no banco de dados:", customerId);
-
-    // Estrutura para a requisição de tokenização
-    const tokenBody = {
-      creditCard: {
-        holderName: cardDetails.cardHolder,
-        number: cardDetails.cardNumber,
-        expiryMonth: expirationMonth,
-        expiryYear: expirationYear,
-        ccv: cvv,
+    // Configuração dos dados da assinatura
+    const assinaturaPayload = {
+      payment_method: "credit_card", // Método de pagamento
+      interval: "month", // Intervalo de cobrança (exemplo: mensal)
+      minimum_price: 500, // Preço mínimo
+      interval_count: 1, // Quantidade de intervalos
+      billing_type: "exact_day", // Tipo de faturamento
+      installments: 1, // Parcelas
+      customer: {
+        name: assinaturaData.name,
       },
-      creditCardHolderInfo: {
-        name: cardDetails.cardHolder,
-        email: email,
-        cpfCnpj: cpfCnpj,
-        postalCode: postalCode,
-        addressNumber: cardDetails.numeroCasa || "S/N",
-        phone: telefone,
-        mobilePhone: telefone,
-        addressComplement: cardDetails.addressComplement || "",
+      card: {
+        number: assinaturaData.card_number,
+        holder_name: assinaturaData.card_holder_name,
+        exp_month: assinaturaData.card_exp_month,
+        exp_year: assinaturaData.card_exp_year,
+        cvv: assinaturaData.card_cvv,
       },
-      customer: customerId, // Agora estamos usando o customerId da tabela users
-      remoteIp: req.ip,
+      pricing_scheme: {
+        scheme_type: "Unit",
+        price: assinaturaData.price,
+      },
+      quantity: assinaturaData.quantity || 1, // Quantidade de itens
+      billing_day: assinaturaData.billing_day || 10, // Dia de faturamento
+      statement_descriptor: "Assinatura Higo", // Descrição na fatura
+      customer_id: assinaturaData.customer_id,
+      items: [
+        {
+          pricing_scheme: {
+            scheme_type: "Unit",
+            price: assinaturaData.price,
+          },
+          quantity: assinaturaData.quantity || 1,
+          description: assinaturaData.item_description || "Assinatura Higo",
+        },
+      ],
     };
 
-    console.log(tokenBody)
-    // Opções para a requisição da tokenização
-    const tokenOptions = {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        access_token: ASAAS_API_KEY, // Substitua com seu token de acesso correto
-      },
-      body: JSON.stringify(tokenBody),
-    };
-
-    // Realizar a requisição para a API Asaas
-    const tokenResponse = await fetch(
-      "https://www.asaas.com/api/v3/creditCard/tokenizeCreditCard",
-      tokenOptions
+    // Envio da requisição para o Pagar.me
+    console.log("Enviando dados para criar assinatura no Pagar.me...");
+    const response = await axios.post(
+      "https://api.pagar.me/core/v5/subscriptions",
+      assinaturaPayload,
+      {
+        headers: {
+          accept: "application/json",
+          authorization:
+            "Basic c2tfdGVzdF9lMzU5MjJmNmFmNzI0ZWRjOWM1NGE0NWI0ZWRjZjBmYTo=",
+          "content-type": "application/json",
+        },
+      }
     );
 
-    // Captura a resposta da API como texto
-    const responseText = await tokenResponse.text();
-    console.log("Resposta da API:", responseText);
-
-    // Verificar se a resposta foi bem-sucedida (status 2xx)
-    if (!tokenResponse.ok) {
-      console.error(
-        `Erro na resposta: ${tokenResponse.status} - ${tokenResponse.statusText}`
-      );
-      return res.status(tokenResponse.status).json({
-        success: false,
-        message: "Erro ao tokenizar cartão.",
-        error: responseText,
-      });
-    }
-
-    // Tenta fazer o parse da resposta em JSON
-    let tokenData;
-    try {
-      tokenData = JSON.parse(responseText);
-    } catch (jsonParseError) {
-      console.error("Erro ao parsear resposta JSON:", jsonParseError);
-      return res.status(500).json({
-        success: false,
-        message:
-          "Erro ao processar a resposta da API. A resposta não é um JSON válido.",
-        error: jsonParseError.message,
-      });
-    }
-
-    console.log("Token de cartão de crédito criado:", tokenData);
-
-    // Resposta de sucesso
-    res.json({
-      success: true,
-      message: "Assinatura criada com sucesso.",
-      tokenData: tokenData,
+    console.log("Assinatura criada com sucesso:", response.data);
+    return res.status(200).json({
+      message: "Assinatura criada com sucesso!",
+      data: response.data,
     });
-  } catch (err) {
-    // Captura erros inesperados e envia resposta de erro
-    console.error("Erro inesperado:", err);
-    res.status(500).json({
-      success: false,
-      message: "Erro ao buscar informações do cliente ou tokenizar cartão.",
-      error: err.message,
+  } catch (error) {
+    console.error("Erro ao criar assinatura no Pagar.me:", error.response?.data || error.message);
+    return res.status(500).json({
+      message: "Erro ao processar a criação da assinatura",
+      error: error.response?.data || error.message,
     });
   }
 });
@@ -443,16 +376,16 @@ app.post("/criar-assinatura", async (req, res) => {
 const generateToken = async () => {
   try {
     const response = await axios.post(
-      'https://cdpj.partners.bancointer.com.br/oauth/v2/token',
-      'client_id=3fea13df-1e68-447c-b306-a87d7c058024&client_secret=79f8d856-bb83-4ada-a5d0-01b22cfe43c1&scope=cob.write&grant_type=client_credentials',
+      "https://cdpj.partners.bancointer.com.br/oauth/v2/token",
+      "client_id=3fea13df-1e68-447c-b306-a87d7c058024&client_secret=79f8d856-bb83-4ada-a5d0-01b22cfe43c1&scope=cob.write&grant_type=client_credentials",
       {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        httpsAgent: new (require('https')).Agent({
+        httpsAgent: new (require("https").Agent)({
           cert: fs.readFileSync(certPath),
           key: fs.readFileSync(keyPath),
-        })
+        }),
       }
     );
 
@@ -467,45 +400,45 @@ const generateToken = async () => {
   `;
     db.execute(query, [token, data_geracao], (err, results) => {
       if (err) {
-        console.error('Erro ao atualizar o banco de dados:', err);
+        console.error("Erro ao atualizar o banco de dados:", err);
         return;
       }
-      console.log('Token atualizado com sucesso no banco de dados.');
+      console.log("Token atualizado com sucesso no banco de dados.");
     });
 
     return token; // Agora retorna o token gerado
   } catch (error) {
-    console.error('Erro ao gerar o token:', error);
+    console.error("Erro ao gerar o token:", error);
     throw error; // Lança o erro para ser tratado na rota
   }
 };
 
 // Rota para gerar o token via API
-app.post('/gerar-token', async (req, res) => {
+app.post("/gerar-token", async (req, res) => {
   try {
     const token = await generateToken();
     res.status(200).json({
       success: true,
       token: token,
-      message: 'Token gerado e armazenado com sucesso!',
+      message: "Token gerado e armazenado com sucesso!",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Erro ao gerar o token.',
+      message: "Erro ao gerar o token.",
       error: error.message,
     });
   }
 });
 
 // Agendar a atualização do token a cada 40 minutos
-cron.schedule('*/40 * * * *', async () => {
+cron.schedule("*/40 * * * *", async () => {
   try {
-    console.log('Atualizando token via cron...');
+    console.log("Atualizando token via cron...");
     await generateToken();
-    console.log('Token atualizado com sucesso via cron!');
+    console.log("Token atualizado com sucesso via cron!");
   } catch (error) {
-    console.error('Erro ao atualizar o token via cron:', error.message);
+    console.error("Erro ao atualizar o token via cron:", error.message);
   }
 });
 
@@ -521,11 +454,9 @@ const getTokenFromDatabase = async () => {
       throw new Error("Token não encontrado.");
     }
   } catch (err) {
-    throw new Error('Erro ao recuperar o token: ' + err.message);
+    throw new Error("Erro ao recuperar o token: " + err.message);
   }
 };
-
-
 
 app.post("/gerar-cobranca", async (req, res) => {
   // Informações que você já possui
@@ -540,7 +471,7 @@ app.post("/gerar-cobranca", async (req, res) => {
     valor: {
       original: "5.00", // Valor da cobrança
     },
-    chave: "2b3925d5-d94c-4b96-9348-e6510ceae42d", 
+    chave: "2b3925d5-d94c-4b96-9348-e6510ceae42d",
   };
 
   try {
