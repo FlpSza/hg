@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const cron = require("node-cron");
 const pagarme = require("pagarme");
 const fs = require("fs");
+const jwt = require("jsonwebtoken");
 // const fetch = require('node-fetch');
 const PORT = 3000;
 require("dotenv").config();
@@ -51,9 +52,26 @@ const certPath = path.resolve(
 );
 const keyPath = path.resolve(__dirname, "certificados/Inter API_Chave.key");
 
+const verificarToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1]; // Captura o token do cabeçalho Authorization
+
+  if (!token) {
+    return res.status(401).json({ message: "Token não fornecido!" });
+  }
+
+  jwt.verify(token, "seu-segredo", (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Token inválido!" });
+    }
+    req.user = decoded; // Adiciona os dados do usuário à requisição
+    next(); // Chama a próxima função (rota)
+  });
+};
+
 // Rota principal
 app.get("/", (req, res) => {
-o});
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 // Rota para testar conexão com o banco de dados
 app.get("/test-connection", async (req, res) => {
@@ -223,7 +241,9 @@ app.post("/cadastrar-cliente", async (req, res) => {
 
     if (userDataResult.length === 0) {
       console.log(
-        "Email não encontrado na tabela user_data, criando novo registro..." + "dados recebidos: " + JSON.stringify(response.data, null, 2)
+        "Email não encontrado na tabela user_data, criando novo registro..." +
+          "dados recebidos: " +
+          JSON.stringify(response.data, null, 2)
       );
 
       // Se não existir, criamos um novo registro em user_data
@@ -248,7 +268,7 @@ app.post("/cadastrar-cliente", async (req, res) => {
         created_at, 
         updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-      
+
       await db.query(insertUserDataQuery, [
         response.data.id, // pagarme_id
         response.data.name, // name
@@ -270,13 +290,11 @@ app.post("/cadastrar-cliente", async (req, res) => {
         new Date(), // created_at (data atual)
         new Date(), // updated_at (data atual)
       ]);
-      
+
       console.log("Novo cliente registrado na tabela user_data!");
     } else {
-      console.log(
-        "Email encontrado na tabela user_data, atualizando dados..."
-      );
-    
+      console.log("Email encontrado na tabela user_data, atualizando dados...");
+
       // Atualizar os dados do cliente na tabela user_data
       const updateUserDataQuery = `UPDATE user_data SET
         name = ?, 
@@ -296,7 +314,7 @@ app.post("/cadastrar-cliente", async (req, res) => {
         mobile_phone_area_code = ?, 
         updated_at = ?
       WHERE email = ?`;
-    
+
       await db.query(updateUserDataQuery, [
         response.data.name, // name
         response.data.document, // document (CPF)
@@ -316,10 +334,9 @@ app.post("/cadastrar-cliente", async (req, res) => {
         new Date(), // updated_at (data atual)
         clienteData.email, // email (para identificar o registro a ser atualizado)
       ]);
-    
+
       console.log("Dados do cliente atualizados na tabela user_data!");
     }
-    
 
     // 3. Se for um novo usuário, enviar o email de confirmação
     if (userResult.length === 0) {
@@ -344,12 +361,18 @@ app.post("/cadastrar-cliente", async (req, res) => {
       console.log("Email enviado com sucesso!");
     }
 
-    return res
-      .status(200)
-      .json({
-        message: "Cliente cadastrado com sucesso!",
-        data: response.data,
-      });
+    // Gerar o token JWT
+    const token = jwt.sign(
+      { email: clienteData.email, nome: clienteData.name },
+      "seu-segredo",
+      { expiresIn: "1h" }
+    );
+
+    return res.status(200).json({
+      message: "Cliente cadastrado com sucesso!",
+      data: response.data,
+      token: token, // Usuário logado automaticamente
+    });
   } catch (error) {
     console.error("Erro ao cadastrar no Pagar.me:", error);
     return res.status(500).json({ message: "Erro ao processar a requisição" });
@@ -357,7 +380,7 @@ app.post("/cadastrar-cliente", async (req, res) => {
 });
 
 
-app.get("/api/usuario-logado", (req, res) => {
+app.get("/usuario-logado", (req, res) => {
   // Verifica se os dados do usuário estão na sessão
   if (req.session && req.session.userData) {
     res.json({
@@ -373,10 +396,14 @@ app.get("/api/usuario-logado", (req, res) => {
 });
 
 // Rota para criar assinatura (cobrança recorrente) com pagamento via cartão de crédito
-app.post("/criar-assinatura", async (req, res) => {
+app.post("/criar-assinatura", verificarToken, async (req, res) => {
   const assinaturaData = req.body;
+  const usuarioLogado = req.user; // Informações do usuário extraídas do token
 
   try {
+    // Exemplo: Verificar o email do usuário logado
+    console.log("Usuário logado:", usuarioLogado.email);
+
     // Configuração dos dados da assinatura
     const assinaturaPayload = {
       payment_method: "credit_card", // Método de pagamento
@@ -415,7 +442,7 @@ app.post("/criar-assinatura", async (req, res) => {
       ],
     };
 
-    // Envio da requisição para o Pagar.me
+    // Envio da requisição para criar a assinatura no Pagar.me
     console.log("Enviando dados para criar assinatura no Pagar.me...");
     const response = await axios.post(
       "https://api.pagar.me/core/v5/subscriptions",

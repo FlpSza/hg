@@ -365,6 +365,16 @@
     </div>
 
     <script>
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        // O token existe, usuário está logado automaticamente
+        console.log("Usuário está logado");
+      } else {
+        // Não há token, o usuário não está logado
+        console.log("Usuário não está logado");
+      }
+      
       let selectedOption = null;
 
       function toggleOption(optionId) {
@@ -534,7 +544,6 @@
             // Exibe o código Pix no campo de texto oculto
             document.getElementById("codigoPix").value = pixCode;
 
-
             // Habilita o botão de copiar (se necessário)
             document.getElementById("copyButton").style.display = "block";
           } else {
@@ -546,22 +555,22 @@
         }
       }
 
-// Função de copiar o código Pix
-function copiarCodigo() {
-    const codigoPix = document.getElementById("codigoPix");
+      // Função de copiar o código Pix
+      function copiarCodigo() {
+        const codigoPix = document.getElementById("codigoPix");
 
-    // Torna o código Pix visível para ser copiado
-    codigoPix.style.display = "block";
+        // Torna o código Pix visível para ser copiado
+        codigoPix.style.display = "block";
 
-    // Copia o conteúdo do código Pix para a área de transferência
-    codigoPix.select();
-    codigoPix.setSelectionRange(0, 99999); // Para dispositivos móveis
-    document.execCommand("copy");
-    codigoPix.style.display = "none"; 
+        // Copia o conteúdo do código Pix para a área de transferência
+        codigoPix.select();
+        codigoPix.setSelectionRange(0, 99999); // Para dispositivos móveis
+        document.execCommand("copy");
+        codigoPix.style.display = "none";
 
-    // Alerta de confirmação
-    alert("Código Pix copiado com sucesso!");
-  }
+        // Alerta de confirmação
+        alert("Código Pix copiado com sucesso!");
+      }
     </script>
   </body>
 </html>

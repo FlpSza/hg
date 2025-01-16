@@ -301,7 +301,11 @@
               // Se o envio for bem-sucedido, mostre uma mensagem ou redirecione o usuário
               console.log("Cliente cadastrado com sucesso:", data);
               alert("Cadastro realizado com sucesso!");
-              // Aqui você pode redirecionar o usuário para outra página ou mudar o estado da UI
+
+              localStorage.setItem('token', data.token);
+
+              // Redireciona o usuário para a página payment.html
+              window.location.href = "payment.html";
             })
             .catch((error) => {
               // Se ocorrer algum erro, mostre uma mensagem de erro
