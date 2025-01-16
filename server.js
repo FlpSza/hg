@@ -10,7 +10,6 @@ const crypto = require("crypto");
 const cron = require("node-cron");
 const pagarme = require("pagarme");
 const fs = require("fs");
-const jwt = require("jsonwebtoken");
 // const fetch = require('node-fetch');
 const PORT = 3000;
 require("dotenv").config();
@@ -51,22 +50,6 @@ const certPath = path.resolve(
   "certificados/Inter API_Certificado.crt"
 );
 const keyPath = path.resolve(__dirname, "certificados/Inter API_Chave.key");
-
-const verificarToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // Captura o token do cabeçalho Authorization
-
-  if (!token) {
-    return res.status(401).json({ message: "Token não fornecido!" });
-  }
-
-  jwt.verify(token, "seu-segredo", (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ message: "Token inválido!" });
-    }
-    req.user = decoded; // Adiciona os dados do usuário à requisição
-    next(); // Chama a próxima função (rota)
-  });
-};
 
 // Rota principal
 app.get("/", (req, res) => {
@@ -361,17 +344,16 @@ app.post("/cadastrar-cliente", async (req, res) => {
       console.log("Email enviado com sucesso!");
     }
 
-    // Gerar o token JWT
-    const token = jwt.sign(
-      { email: clienteData.email, nome: clienteData.name },
-      "seu-segredo",
-      { expiresIn: "1h" }
-    );
-
+    req.session.userId = clienteData.email;  // Armazenar o ID do usuário na sessão
+    if (req.session.userId) {
+      // O usuário está logado
+      console.log('Bem-vindo ao painel');
+    } else {
+      console.log('Usuário não autenticado');
+    }
     return res.status(200).json({
       message: "Cliente cadastrado com sucesso!",
       data: response.data,
-      token: token, // Usuário logado automaticamente
     });
   } catch (error) {
     console.error("Erro ao cadastrar no Pagar.me:", error);
@@ -396,77 +378,130 @@ app.get("/usuario-logado", (req, res) => {
 });
 
 // Rota para criar assinatura (cobrança recorrente) com pagamento via cartão de crédito
-app.post("/criar-assinatura", verificarToken, async (req, res) => {
+app.post("/criar-assinatura", async (req, res) => {
+  console.log("Iniciando a criação de assinatura...");
   const assinaturaData = req.body;
-  const usuarioLogado = req.user; // Informações do usuário extraídas do token
+  console.log("Recebido no back-end:", JSON.stringify(assinaturaData, null, 2));
 
   try {
-    // Exemplo: Verificar o email do usuário logado
-    console.log("Usuário logado:", usuarioLogado.email);
+    if (!req.session.userId) {
+      console.warn("Usuário não autenticado");
+      return res.status(401).json({ message: "Usuário não autenticado" });
+    }
 
-    // Configuração dos dados da assinatura
+    console.log("Usuário autenticado, continuando a execução...");
+
+    const userId = req.session.userId;
+
+    // Função para buscar os dados do usuário
+    const getUserData = async (userId) => {
+      try {
+        const [results] = await db.query(
+          `SELECT email, name, id
+           FROM user_data
+           WHERE email = ?`,
+          [userId]
+        );
+        return results;
+      } catch (err) {
+        console.error("Erro ao consultar o banco de dados:", err.message);
+        throw err;
+      }
+    };
+
+    console.log("Buscando dados do usuário no banco...");
+    const results = await getUserData(userId);
+    if (results.length === 0) {
+      console.warn("Usuário não encontrado no banco de dados");
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    } else {
+      console.log("Dados do usuário retornados:", results);
+    }
+
+    const userData = results[0];
+    console.log("Dados do usuário encontrados:", userData);
+
+    // Criação do payload para a assinatura
     const assinaturaPayload = {
-      payment_method: "credit_card", // Método de pagamento
-      interval: "month", // Intervalo de cobrança (exemplo: mensal)
-      minimum_price: 500, // Preço mínimo
-      interval_count: 1, // Quantidade de intervalos
-      billing_type: "exact_day", // Tipo de faturamento
-      installments: 1, // Parcelas
+      payment_method: "credit_card",
+      interval: "month",
+      minimum_price: 5000,
+      interval_count: 1,
+      billing_type: "exact_day",
+      installments: 1,
       customer: {
-        name: assinaturaData.name,
+        name: userData.name,
       },
       card: {
-        number: assinaturaData.card_number,
-        holder_name: assinaturaData.card_holder_name,
-        exp_month: assinaturaData.card_exp_month,
-        exp_year: assinaturaData.card_exp_year,
-        cvv: assinaturaData.card_cvv,
+        number: assinaturaData.cardDetails.cardNumber,
+        holder_name: assinaturaData.cardDetails.cardHolder,
+        exp_month: assinaturaData.cardDetails.expirationMonth,
+        exp_year: assinaturaData.cardDetails.expirationYear,
+        cvv: assinaturaData.cardDetails.cvv,
       },
       pricing_scheme: {
         scheme_type: "Unit",
-        price: assinaturaData.price,
+        price: 5000,
       },
-      quantity: assinaturaData.quantity || 1, // Quantidade de itens
-      billing_day: assinaturaData.billing_day || 10, // Dia de faturamento
-      statement_descriptor: "Assinatura Higo", // Descrição na fatura
-      customer_id: assinaturaData.customer_id,
+      quantity: 1,
+      billing_day: 10,
+      statement_descriptor: "Assinatura Higo",
       items: [
         {
           pricing_scheme: {
             scheme_type: "Unit",
-            price: assinaturaData.price,
+            price: 500,
           },
-          quantity: assinaturaData.quantity || 1,
-          description: assinaturaData.item_description || "Assinatura Higo",
+          quantity: 1,
+          description: "Assinatura Higo",
         },
       ],
     };
 
-    // Envio da requisição para criar a assinatura no Pagar.me
-    console.log("Enviando dados para criar assinatura no Pagar.me...");
-    const response = await axios.post(
-      "https://api.pagar.me/core/v5/subscriptions",
-      assinaturaPayload,
-      {
-        headers: {
-          accept: "application/json",
-          authorization:
-            "Basic c2tfdGVzdF9lMzU5MjJmNmFmNzI0ZWRjOWM1NGE0NWI0ZWRjZjBmYTo=",
-          "content-type": "application/json",
-        },
-      }
-    );
+    console.log("Payload da assinatura:", JSON.stringify(assinaturaPayload, null, 2));
 
-    console.log("Assinatura criada com sucesso:", response.data);
-    return res.status(200).json({
-      message: "Assinatura criada com sucesso!",
-      data: response.data,
-    });
+    // Envio para a API Pagar.me
+    try {
+      console.log("Enviando requisição para criar assinatura...");
+      const response = await axios.post(
+        "https://api.pagar.me/core/v5/subscriptions",
+        assinaturaPayload,
+        {
+          headers: {
+            accept: "application/json",
+            authorization: "Basic c2tfdGVzdF9lMzU5MjJmNmFmNzI0ZWRjOWM1NGE0NWI0ZWRjZjBmYTo=",
+            "content-type": "application/json",
+          },
+        }
+      );
+
+      console.log("Status Code:", response.status);
+      console.log("Resposta completa:", JSON.stringify(response.data, null, 2));
+
+      return res.status(200).json({
+        message: "Assinatura criada com sucesso!",
+        data: response.data,
+      });
+    } catch (error) {
+      if (error.response) {
+        console.error("Erro na API do Pagar.me:", JSON.stringify(error.response?.data, null, 2), "Status Code:", error.response?.status);
+        return res.status(error.response?.status || 500).json({
+          message: "Erro ao criar assinatura no Pagar.me",
+          error: error.response?.data || error.message,
+        });
+      } else {
+        console.error("Erro desconhecido:", error.message);
+        return res.status(500).json({
+          message: "Erro interno no servidor",
+          error: error.message,
+        });
+      }
+    }
   } catch (error) {
-    console.error("Erro ao criar assinatura no Pagar.me:", error.response?.data || error.message);
+    console.error("Erro geral:", error.message);
     return res.status(500).json({
-      message: "Erro ao processar a criação da assinatura",
-      error: error.response?.data || error.message,
+      message: "Erro interno no servidor",
+      error: error.message,
     });
   }
 });

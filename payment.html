@@ -374,7 +374,7 @@
         // Não há token, o usuário não está logado
         console.log("Usuário não está logado");
       }
-      
+
       let selectedOption = null;
 
       function toggleOption(optionId) {
@@ -462,37 +462,54 @@
         // Obter o email da sessão (exemplo de como isso pode ser feito, substitua conforme necessário)
         const email = sessionStorage.getItem("email"); // Ou qualquer outro método para acessar o email da sessão
 
-        const paymentData = {
-          billingType: selectedOption === "credit-card" ? "CREDIT_CARD" : "PIX",
-          customerId: "cus_0T1mdomVMi39", // Substitua pelo ID do cliente recuperado no backend
-          value: 5.0, // Valor da assinatura
-          nextDueDate: new Date().toISOString().split("T")[0], // Data inicial da assinatura
-          cycle: "MONTHLY",
-          description: "Assinatura Higo",
-          email: email, // Adicionando o email aqui
-          cardDetails: {
-            cardHolder: document.getElementById("cardHolder").value,
-            cardNumber: document.getElementById("cardNumber").value,
-            expirationMonth: document.getElementById("expirationMonth").value,
-            expirationYear: document.getElementById("expirationYear").value,
-            cvv: document.getElementById("cvv").value,
-          },
-        };
+        if (selectedOption === "credit-card") {
+          const cardHolder = document.getElementById("cardHolder").value;
+          const cardNumber = document.getElementById("cardNumber").value;
+          const expirationMonth =
+            document.getElementById("expirationMonth").value;
+          const expirationYear =
+            document.getElementById("expirationYear").value;
+          const cvv = document.getElementById("cvv").value;
 
-        try {
-          const response = await fetch("/criar-assinatura", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(paymentData),
-          });
-          const result = await response.json();
-          if (result.success) {
-            alert("Assinatura criada com sucesso!");
-          } else {
-            alert(result.message || "Erro ao criar assinatura.");
+          if (
+            !cardHolder ||
+            !cardNumber ||
+            !expirationMonth ||
+            !expirationYear ||
+            !cvv
+          ) {
+            alert("Preencha todos os campos do cartão.");
+            return;
           }
-        } catch (error) {
-          alert("Erro na comunicação com o servidor.");
+
+          const assinaturaData = {
+            cardDetails: {
+              cardHolder,
+              cardNumber,
+              expirationMonth,
+              expirationYear,
+              cvv,
+            },
+          };
+
+          console.log("front: ", assinaturaData);
+
+          try {
+            const response = await fetch("/criar-assinatura", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(assinaturaData), // Agora os dados são enviados ao servidor
+            });
+            const result = await response.json();
+            if (result.success) {
+              alert("Assinatura criada com sucesso!");
+            } else {
+              alert(result.message || "Erro ao criar assinatura.");
+            }
+          } catch (error) {
+            alert("Erro na comunicação com o servidor.");
+            console.log(error);
+          }
         }
       }
 
