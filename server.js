@@ -223,31 +223,103 @@ app.post("/cadastrar-cliente", async (req, res) => {
 
     if (userDataResult.length === 0) {
       console.log(
-        "Email não encontrado na tabela user_data, criando novo registro..."
+        "Email não encontrado na tabela user_data, criando novo registro..." + "dados recebidos: " + JSON.stringify(response.data, null, 2)
       );
 
       // Se não existir, criamos um novo registro em user_data
-      const insertUserDataQuery = `
-        INSERT INTO user_data (
-          pagarme_id, name, email, code, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?)
-      `;
-
+      const insertUserDataQuery = `INSERT INTO user_data (
+        id, 
+        name, 
+        email, 
+        document, 
+        document_type, 
+        type, 
+        delinquent, 
+        address_id, 
+        address_line_1, 
+        zip_code, 
+        city, 
+        state, 
+        country, 
+        birthdate, 
+        mobile_phone_country_code, 
+        mobile_phone_number, 
+        mobile_phone_area_code, 
+        created_at, 
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      
       await db.query(insertUserDataQuery, [
         response.data.id, // pagarme_id
         response.data.name, // name
         response.data.email, // email
-        response.data.document, // code (como exemplo, estou usando 'document' como 'code', se necessário, ajuste a lógica)
-        new Date(), // created_at
-        new Date(), // updated_at
+        response.data.document, // document (CPF)
+        response.data.document_type, // document_type (cpf)
+        response.data.type, // type (individual)
+        response.data.delinquent, // delinquent (false/true)
+        response.data.address.id, // address_id (ID do endereço)
+        response.data.address.line_1, // address_line_1 (Rua alair, nº 157)
+        response.data.address.zip_code, // zip_code (21630030)
+        response.data.address.city, // city (Rio de Janeiro)
+        response.data.address.state, // state (RJ)
+        response.data.address.country, // country (BR)
+        response.data.birthdate, // birthdate (1994-12-31)
+        response.data.phones.mobile_phone.country_code, // mobile_phone_country_code (21)
+        response.data.phones.mobile_phone.number, // mobile_phone_number (971511007)
+        response.data.phones.mobile_phone.area_code, // mobile_phone_area_code (21)
+        new Date(), // created_at (data atual)
+        new Date(), // updated_at (data atual)
       ]);
-
+      
       console.log("Novo cliente registrado na tabela user_data!");
     } else {
       console.log(
-        "Email encontrado na tabela user_data, não foi necessário criar novo registro."
+        "Email encontrado na tabela user_data, atualizando dados..."
       );
+    
+      // Atualizar os dados do cliente na tabela user_data
+      const updateUserDataQuery = `UPDATE user_data SET
+        name = ?, 
+        document = ?, 
+        document_type = ?, 
+        type = ?, 
+        delinquent = ?, 
+        address_id = ?, 
+        address_line_1 = ?, 
+        zip_code = ?, 
+        city = ?, 
+        state = ?, 
+        country = ?, 
+        birthdate = ?, 
+        mobile_phone_country_code = ?, 
+        mobile_phone_number = ?, 
+        mobile_phone_area_code = ?, 
+        updated_at = ?
+      WHERE email = ?`;
+    
+      await db.query(updateUserDataQuery, [
+        response.data.name, // name
+        response.data.document, // document (CPF)
+        response.data.document_type, // document_type (cpf)
+        response.data.type, // type (individual)
+        response.data.delinquent, // delinquent (false/true)
+        response.data.address.id, // address_id (ID do endereço)
+        response.data.address.line_1, // address_line_1 (Rua alair, nº 157)
+        response.data.address.zip_code, // zip_code (21630030)
+        response.data.address.city, // city (Rio de Janeiro)
+        response.data.address.state, // state (RJ)
+        response.data.address.country, // country (BR)
+        response.data.birthdate, // birthdate (1994-12-31)
+        response.data.phones.mobile_phone.country_code, // mobile_phone_country_code (21)
+        response.data.phones.mobile_phone.number, // mobile_phone_number (971511007)
+        response.data.phones.mobile_phone.area_code, // mobile_phone_area_code (21)
+        new Date(), // updated_at (data atual)
+        clienteData.email, // email (para identificar o registro a ser atualizado)
+      ]);
+    
+      console.log("Dados do cliente atualizados na tabela user_data!");
     }
+    
 
     // 3. Se for um novo usuário, enviar o email de confirmação
     if (userResult.length === 0) {
@@ -277,13 +349,13 @@ app.post("/cadastrar-cliente", async (req, res) => {
       .json({
         message: "Cliente cadastrado com sucesso!",
         data: response.data,
-        
       });
   } catch (error) {
     console.error("Erro ao cadastrar no Pagar.me:", error);
     return res.status(500).json({ message: "Erro ao processar a requisição" });
   }
 });
+
 
 app.get("/api/usuario-logado", (req, res) => {
   // Verifica se os dados do usuário estão na sessão
