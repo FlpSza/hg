@@ -68,6 +68,7 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            margin-top: 2%;
         }
 
         .card-container {
@@ -75,8 +76,8 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            margin-left: -100%;
-            margin-top: 17%;
+            margin-left: -60%;
+            margin-top: 11%;
         }
         
         .card {
@@ -87,7 +88,7 @@
             border: 3px solid black;
             text-align: left;
             width: 50%;
-            height: 32rem;
+            height: 30rem;
             z-index: 1;
         }
 
@@ -150,14 +151,14 @@
 
         .botao{
             margin-top: 10%;
-            margin-left: -35%;
+            margin-left: -15%;
         }
 
         .botao2{
             position: absolute;
             z-index: 10000000;
             margin-top: -15%;
-            margin-left: 39%;
+            margin-left: 42%;
         }
 
         h1 span {
@@ -215,30 +216,95 @@
                 overflow-x: hidden;
             }
             .section.header {
+                width: 100%;
                 flex-direction: column; /* Coloca a imagem e o texto em coluna */
                 text-align: center; /* Centraliza o conteúdo */
+                background-image: none;
                 background-image: url('./img/Banner_Site_Promo_Celular.jpg');
-                background-size: cover;
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: top center; /* Ajusta a posição da imagem para o topo */
+                margin-top: 0; /* Remove ou reduz a margem superior */
             }
         
+            .imagens1 {
+                display: flex;
+                flex-direction: column; /* Imagem e texto ficam lado a lado */
+                width: 400%;
+                margin-top: -70%;
+                margin-left: 7%;
+                z-index: 10;
+            }
+
             .section1{
                 display: flexbox;
                 flex-direction: column;
             }
         
             .card {
-                width: 100%; /* Faz o cartão ocupar toda a largura disponível */
-                margin: 20px 0; /* Espaçamento entre os cartões */
+                width: 60%; /* Faz o cartão ocupar toda a largura disponível */
+                margin-top: 15%;
+                margin-left: 38%;
+                height: 40rem;
             }
         
+            .card-container {
+                margin-top: 30%;
+            }
+
+            .nocontrole{
+                width: 70%;
+                margin-left: 60%;
+            }
+
+            
+            .segundo_card {
+                display: flex;
+                justify-content: center; /* Centraliza horizontalmente */
+                align-items: center; /* Centraliza verticalmente */
+                margin-top: -220%;
+                margin-left: 90%;
+            }
+
             .sociais {
                 flex-direction: column; /* Alinha os ícones de redes sociais em coluna */
                 margin-top: 20px;
+                overflow-x: hidden; /* Evita elementos "vazando" para fora da tela */
             }
         
+            .familia {
+                 width: 100%;
+                 margin-left: 0%;
+                 margin-top: 100%;
+                 margin-bottom: -10%;
+                 display: block; /* Garante que o elemento se comporte como um bloco */
+             }
+         
+            .hcnm{
+                 position: absolute;
+                 margin-left: 30%;
+                 margin-top: 10%;
+                 width: 35%;
+             }
+
             .button {
+                font-size: 12px; /* Reduz o tamanho do texto do botão em telas pequenas */
+                padding: 15px 15px;
+            }
+
+            .botao{
+                margin-left: -78%;
+                margin-top: 5%;
+            }
+
+            .botao2 {
+                width: 40%;
                 font-size: 16px; /* Reduz o tamanho do texto do botão em telas pequenas */
-                padding: 15px 40px;
+                padding: 15px 60px;
+                margin-top: -152%;
+                margin-left: 35%;
+                display: block; /* Garante que o botão fique em uma linha */
+                white-space: nowrap; /* Impede que o texto quebre para a próxima linha */
             }
 }
     </style>

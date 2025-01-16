@@ -25,5 +25,8 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.16",
     "pagarme": "^4.35.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }
